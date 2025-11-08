@@ -1,0 +1,203 @@
+import { useState, useEffect } from 'react';
+import { Search, Star, Tag, TrendingUp, MapPin } from 'lucide-react';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { BusinessCard } from './business-card';
+import { mockBusinesses } from './mock-data';
+
+interface DirectoryPageProps {
+  onViewListing: (businessId: string) => void;
+  initialCategory?: string;
+  initialLocation?: string;
+}
+
+export function DirectoryPage({ onViewListing, initialCategory, initialLocation }: DirectoryPageProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory || null);
+  const [selectedLocation, setSelectedLocation] = useState<string>(initialLocation || 'all');
+  const [activeTab, setActiveTab] = useState<string>('all');
+
+  // Update selected category when initialCategory prop changes
+  useEffect(() => {
+    if (initialCategory === 'featured') {
+      setActiveTab('featured');
+      setSelectedCategory(null);
+    } else if (initialCategory) {
+      setSelectedCategory(initialCategory);
+      setActiveTab('all');
+    }
+  }, [initialCategory]);
+
+  // Update selected location when initialLocation prop changes
+  useEffect(() => {
+    if (initialLocation) {
+      setSelectedLocation(initialLocation);
+    }
+  }, [initialLocation]);
+
+  const categories = [
+    'All',
+    'Restaurant',
+    'Retail',
+    'Services',
+    'Healthcare',
+    'Technology',
+    'Entertainment',
+  ];
+
+  // Get unique cities from businesses, filtering out undefined/null values
+  const cities = Array.from(
+    new Set(
+      mockBusinesses
+        .map(b => b.city)
+        .filter((city): city is string => Boolean(city))
+    )
+  ).sort();
+
+  const filteredBusinesses = mockBusinesses.filter((business) => {
+    const matchesSearch =
+      business.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      business.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      !selectedCategory || selectedCategory === 'All' || business.category === selectedCategory;
+    const matchesLocation =
+      selectedLocation === 'all' || business.city === selectedLocation;
+    return matchesSearch && matchesCategory && matchesLocation;
+  });
+
+  const featuredBusinesses = filteredBusinesses.filter((b) => b.featured);
+  const dealsBusinesses = filteredBusinesses.filter((b) => b.hasDeals);
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="mb-4">All Listings</h1>
+      </div>
+
+      {/* Search Bar with Location Filter */}
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Search businesses..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="w-full sm:w-64">
+            <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+              <SelectTrigger className="w-full">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  <SelectValue placeholder="All Locations" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Locations</SelectItem>
+                {cities.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {selectedLocation !== 'all' && (
+          <div className="mt-3">
+            <Badge variant="secondary" className="gap-1">
+              <MapPin className="w-3 h-3" />
+              {selectedLocation}
+              <button
+                onClick={() => setSelectedLocation('all')}
+                className="ml-1 hover:bg-black/10 rounded-full p-0.5"
+              >
+                ×
+              </button>
+            </Badge>
+          </div>
+        )}
+      </div>
+
+      {/* Category Filter */}
+      <div className="mb-8">
+        <div className="flex flex-wrap gap-2">
+          {categories.map((category) => (
+            <Button
+              key={category}
+              variant={selectedCategory === category ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tabs for Featured, Deals, All */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="all" className="gap-2">
+            <TrendingUp className="w-4 h-4" />
+            All Businesses
+          </TabsTrigger>
+          <TabsTrigger value="featured" className="gap-2">
+            <Star className="w-4 h-4" />
+            Featured
+          </TabsTrigger>
+          <TabsTrigger value="deals" className="gap-2">
+            <Tag className="w-4 h-4" />
+            Deals
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredBusinesses.map((business) => (
+              <BusinessCard key={business.id} business={business} onClick={() => onViewListing(business.id)} />
+            ))}
+          </div>
+          {filteredBusinesses.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              No businesses found matching your criteria
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="featured">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredBusinesses.map((business) => (
+              <BusinessCard key={business.id} business={business} onClick={() => onViewListing(business.id)} />
+            ))}
+          </div>
+          {featuredBusinesses.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              No featured businesses available
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="deals">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {dealsBusinesses.map((business) => (
+              <BusinessCard key={business.id} business={business} onClick={() => onViewListing(business.id)} />
+            ))}
+          </div>
+          {dealsBusinesses.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              No deals available at the moment
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
