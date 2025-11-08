@@ -95,10 +95,10 @@ export function WhiteLabelPlatform({ onBack, partnerName }: WhiteLabelPlatformPr
 
   {/* Domain Settings Dialog */}
   <Dialog open={domainSettingsOpen} onOpenChange={setDomainSettingsOpen}>
-    <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col" aria-describedby={undefined}>
+    <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col" aria-describedby="wl-platform-settings-desc">
       <DialogHeader>
         <DialogTitle>Platform Settings</DialogTitle>
-        <DialogDescription>
+        <DialogDescription id="wl-platform-settings-desc">
           Configure your white-label platform settings, branding, and custom domain
         </DialogDescription>
       </DialogHeader>

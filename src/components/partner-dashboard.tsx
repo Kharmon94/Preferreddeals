@@ -40,6 +40,27 @@ export function PartnerDashboard({ userName, onNavigate }: PartnerDashboardProps
   });
   const [showAddPayment, setShowAddPayment] = useState(false);
   
+  // Payment confirmation state
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [useExistingCard, setUseExistingCard] = useState(true);
+  const [paymentCardData, setPaymentCardData] = useState({
+    cardNumber: '',
+    expiry: '',
+    cvc: '',
+    name: '',
+  });
+
+  // Mock payment methods
+  const [paymentMethods, setPaymentMethods] = useState([
+    {
+      id: '1',
+      type: 'Visa',
+      last4: '4242',
+      expiry: '12/26',
+      isDefault: true,
+    },
+  ]);
+  
   const myBusinesses = [
     { 
       id: '1', 
@@ -238,17 +259,54 @@ export function PartnerDashboard({ userName, onNavigate }: PartnerDashboardProps
   };
 
   const handleUpgradeToPremium = () => {
+    // Close upgrade modal and open payment dialog
+    setShowUpgradeModal(false);
+    setShowPaymentDialog(true);
+    // Set default to use existing card if available
+    setUseExistingCard(paymentMethods.length > 0);
+  };
+
+  const handleConfirmPayment = () => {
+    // Validate payment method
+    if (!useExistingCard) {
+      if (!paymentCardData.cardNumber || !paymentCardData.expiry || !paymentCardData.cvc || !paymentCardData.name) {
+        toast.error('Please fill in all card details.');
+        return;
+      }
+      
+      // Add the new card
+      const last4 = paymentCardData.cardNumber.slice(-4);
+      const cardType = paymentCardData.cardNumber.startsWith('4') ? 'Visa' : 
+                       paymentCardData.cardNumber.startsWith('5') ? 'Mastercard' : 'Card';
+      
+      const newPaymentMethod = {
+        id: String(paymentMethods.length + 1),
+        type: cardType,
+        last4,
+        expiry: paymentCardData.expiry,
+        isDefault: paymentMethods.length === 0,
+      };
+
+      setPaymentMethods([...paymentMethods, newPaymentMethod]);
+      setPaymentCardData({ cardNumber: '', expiry: '', cvc: '', name: '' });
+    }
+
     if (upgradingBusinessId) {
       const business = myBusinesses.find(b => b.id === upgradingBusinessId);
       const plan = premiumPlans.find(p => p.id === selectedPlan);
       
       if (business && plan) {
-        // In a real app, this would update the backend
+        // In a real app, this would process the payment and update the backend
         toast.success(`"${business.name}" upgraded to ${plan.name}!`);
-        setShowUpgradeModal(false);
+        setShowPaymentDialog(false);
         setUpgradingBusinessId(null);
+        setPaymentCardData({ cardNumber: '', expiry: '', cvc: '', name: '' });
       }
     }
+  };
+
+  const handlePaymentCardChange = (field: string, value: string) => {
+    setPaymentCardData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -712,12 +770,12 @@ export function PartnerDashboard({ userName, onNavigate }: PartnerDashboardProps
       {/* View Listing Modal */}
       <Dialog open={!!viewListingId} onOpenChange={(open) => !open && setViewListingId(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="view-listing-description">
+          <DialogHeader>
+            <DialogTitle className="text-xl sm:text-2xl">{selectedListing?.name || 'Business Listing'}</DialogTitle>
+            <DialogDescription id="view-listing-description" className="text-xs sm:text-sm">Preview how your listing appears to customers</DialogDescription>
+          </DialogHeader>
           {selectedListing && (
             <>
-              <DialogHeader>
-                <DialogTitle className="text-xl sm:text-2xl">{selectedListing.name}</DialogTitle>
-                <DialogDescription id="view-listing-description" className="text-xs sm:text-sm">Preview how your listing appears to customers</DialogDescription>
-              </DialogHeader>
 
               <div className="space-y-4 sm:space-y-6">
                 {/* Image */}
@@ -856,12 +914,12 @@ export function PartnerDashboard({ userName, onNavigate }: PartnerDashboardProps
         }
       }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="edit-listing-description">
+          <DialogHeader>
+            <DialogTitle className="text-xl sm:text-2xl">Edit Listing</DialogTitle>
+            <DialogDescription id="edit-listing-description" className="text-xs sm:text-sm">Update your business information</DialogDescription>
+          </DialogHeader>
           {editingListing && (
             <>
-              <DialogHeader>
-                <DialogTitle className="text-xl sm:text-2xl">Edit Listing</DialogTitle>
-                <DialogDescription id="edit-listing-description" className="text-xs sm:text-sm">Update your business information</DialogDescription>
-              </DialogHeader>
 
               <div className="space-y-4 sm:space-y-6">
                 {/* Business Photos */}
@@ -1392,10 +1450,10 @@ export function PartnerDashboard({ userName, onNavigate }: PartnerDashboardProps
 
       {/* Upgrade to Premium Modal */}
       <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl" aria-describedby="upgrade-premium-description">
           <DialogHeader>
             <DialogTitle>Upgrade to Premium</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="upgrade-premium-description">
               Choose the perfect plan for your business
             </DialogDescription>
           </DialogHeader>
@@ -1456,10 +1514,10 @@ export function PartnerDashboard({ userName, onNavigate }: PartnerDashboardProps
 
       {/* Add Payment Method Dialog */}
       <Dialog open={showAddPayment} onOpenChange={setShowAddPayment}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="add-payment-description">
           <DialogHeader>
             <DialogTitle>Add Payment Method</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="add-payment-description">
               Add a new credit or debit card to your account
             </DialogDescription>
           </DialogHeader>
@@ -1556,6 +1614,156 @@ export function PartnerDashboard({ userName, onNavigate }: PartnerDashboardProps
             >
               <CreditCard className="w-4 h-4 mr-2" />
               Add Card
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Confirmation Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="max-w-md" aria-describedby="payment-dialog-description">
+          <DialogHeader>
+            <DialogTitle>Confirm Payment</DialogTitle>
+            <DialogDescription id="payment-dialog-description">
+              Complete your payment to upgrade to {premiumPlans.find(p => p.id === selectedPlan)?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Plan Summary */}
+            <div className="bg-muted p-4 rounded-lg">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <p className="font-medium">{premiumPlans.find(p => p.id === selectedPlan)?.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {myBusinesses.find(b => b.id === upgradingBusinessId)?.name}
+                  </p>
+                </div>
+                <p className="text-2xl">${premiumPlans.find(p => p.id === selectedPlan)?.price}</p>
+              </div>
+              {premiumPlans.find(p => p.id === selectedPlan)?.savings && (
+                <Badge variant="secondary" className="mt-2">
+                  {premiumPlans.find(p => p.id === selectedPlan)?.savings}
+                </Badge>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Payment Method Selection */}
+            <div className="space-y-3">
+              <Label>Payment Method</Label>
+              
+              {paymentMethods.length > 0 && (
+                <div className="space-y-2">
+                  <div 
+                    className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                      useExistingCard ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground'
+                    }`}
+                    onClick={() => setUseExistingCard(true)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                          useExistingCard ? 'border-primary' : 'border-muted-foreground'
+                        }`}>
+                          {useExistingCard && <div className="w-2 h-2 rounded-full bg-primary" />}
+                        </div>
+                        <CreditCard className="w-5 h-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">{paymentMethods[0].type} •••• {paymentMethods[0].last4}</p>
+                          <p className="text-sm text-muted-foreground">Expires {paymentMethods[0].expiry}</p>
+                        </div>
+                      </div>
+                      {paymentMethods[0].isDefault && (
+                        <Badge variant="secondary">Default</Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div 
+                className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                  !useExistingCard ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground'
+                }`}
+                onClick={() => setUseExistingCard(false)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    !useExistingCard ? 'border-primary' : 'border-muted-foreground'
+                  }`}>
+                    {!useExistingCard && <div className="w-2 h-2 rounded-full bg-primary" />}
+                  </div>
+                  <Plus className="w-5 h-5 text-muted-foreground" />
+                  <p className="font-medium">Add new payment method</p>
+                </div>
+              </div>
+
+              {/* New Card Form */}
+              {!useExistingCard && (
+                <div className="space-y-3 pt-3 border-t">
+                  <div>
+                    <Label htmlFor="payment-card-number">Card Number</Label>
+                    <Input
+                      id="payment-card-number"
+                      placeholder="1234 5678 9012 3456"
+                      value={paymentCardData.cardNumber}
+                      onChange={(e) => handlePaymentCardChange('cardNumber', e.target.value)}
+                      maxLength={16}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="payment-expiry">Expiry (MM/YY)</Label>
+                      <Input
+                        id="payment-expiry"
+                        placeholder="12/26"
+                        value={paymentCardData.expiry}
+                        onChange={(e) => handlePaymentCardChange('expiry', e.target.value)}
+                        maxLength={5}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="payment-cvc">CVC</Label>
+                      <Input
+                        id="payment-cvc"
+                        placeholder="123"
+                        value={paymentCardData.cvc}
+                        onChange={(e) => handlePaymentCardChange('cvc', e.target.value)}
+                        maxLength={4}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="payment-cardholder">Cardholder Name</Label>
+                    <Input
+                      id="payment-cardholder"
+                      placeholder="John Doe"
+                      value={paymentCardData.name}
+                      onChange={(e) => handlePaymentCardChange('name', e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowPaymentDialog(false);
+                setShowUpgradeModal(true);
+              }}
+            >
+              Back
+            </Button>
+            <Button onClick={handleConfirmPayment}>
+              <Check className="w-4 h-4 mr-2" />
+              Confirm Payment - ${premiumPlans.find(p => p.id === selectedPlan)?.price}
             </Button>
           </DialogFooter>
         </DialogContent>

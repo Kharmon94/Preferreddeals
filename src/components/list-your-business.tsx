@@ -209,7 +209,7 @@ export function ListYourBusiness({ onBack, onGetStarted }: ListYourBusinessProps
           <div className="mb-16">
             <h2 className="text-center mb-6">Basic Listing</h2>
             <p className="text-center text-muted-foreground text-lg mb-8 max-w-3xl mx-auto">
-              Get your business listed on Preferred Deals for free. Perfect for establishing your online presence.
+              Get your business listed on Preferred Deals for free. Perfect for building real community connections through word of mouth.
             </p>
             
             <Card className="max-w-2xl mx-auto border-2">

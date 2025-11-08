@@ -131,18 +131,18 @@ export function HomePage({ onNavigate, onViewListing }: HomePageProps) {
             {/* Navigation Arrows - Mobile */}
             <button
               onClick={() => api?.scrollPrev()}
-              className="absolute left-2 top-1/2 -translate-y-1/2 size-8 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 flex items-center justify-center shadow-sm"
+              className="absolute left-0 sm:left-4 top-1/2 -translate-y-1/2 size-8 sm:size-10 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-900 flex items-center justify-center shadow-sm transition-all"
               aria-label="Previous category"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             
             <button
               onClick={() => api?.scrollNext()}
-              className="absolute right-2 top-1/2 -translate-y-1/2 size-8 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 flex items-center justify-center shadow-sm"
+              className="absolute right-0 sm:right-4 top-1/2 -translate-y-1/2 size-8 sm:size-10 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-900 flex items-center justify-center shadow-sm transition-all"
               aria-label="Next category"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
 

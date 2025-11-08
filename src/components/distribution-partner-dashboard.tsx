@@ -1,6 +1,6 @@
 import { WhiteLabelPlatform } from './white-label-platform-new';
 import { useState } from 'react';
-import { Users, Award, DollarSign, TrendingUp, Copy, Share2, Gift, Globe, ArrowRight, MapPin, Package, BarChart3, Eye, Map, ChevronLeft, ChevronRight, CheckCircle, Search } from 'lucide-react';
+import { Users, Award, DollarSign, TrendingUp, Copy, Share2, Gift, Globe, ArrowRight, MapPin, Package, BarChart3, Eye, Map, ChevronLeft, ChevronRight, CheckCircle, Search, CreditCard, Plus, Check, Sparkles, Star } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
@@ -8,6 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Separator } from './ui/separator';
 import { toast } from 'sonner@2.0.3';
 
 interface DistributionPartnerDashboardProps {
@@ -21,14 +24,45 @@ export function DistributionPartnerDashboard({ userName }: DistributionPartnerDa
   const [activeTab, setActiveTab] = useState('overview');
   const [businessDetailOpen, setBusinessDetailOpen] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<any>(null);
+  // Set to false for non-white-label users, true for white-label users
+  const [hasWhiteLabel, setHasWhiteLabel] = useState(true);
+  const [showAddPayment, setShowAddPayment] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('monthly');
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [useExistingCard, setUseExistingCard] = useState(true);
+  const [paymentCardData, setPaymentCardData] = useState({
+    cardNumber: '',
+    expiry: '',
+    cvc: '',
+    name: '',
+  });
+  const [showNfcStandsDialog, setShowNfcStandsDialog] = useState(false);
+  const [nfcStandsQuantity, setNfcStandsQuantity] = useState(5);
+  const [nfcKeychainsQuantity, setNfcKeychainsQuantity] = useState(25);
+  const [nfcDeliveryAddress, setNfcDeliveryAddress] = useState({
+    street: '',
+    city: '',
+    state: '',
+    zip: '',
+  });
+  
+  // Mock payment methods
+  const [paymentMethods, setPaymentMethods] = useState([
+    {
+      id: '1',
+      type: 'Visa',
+      last4: '4242',
+      expiry: '12/26',
+      isDefault: true,
+    },
+  ]);
   
   const stats = {
-    totalReferrals: 45,
-    activeBusinesses: 32,
-    monthlyCommission: 1250,
-    conversionRate: 71,
-    lifetimeEarnings: 8450,
-    pendingCommission: 425,
+    totalClicks: 1847,
+    thisWeekClicks: 423,
+    thisMonthClicks: 1205,
+    clickGrowth: 24.5,
   };
 
   const partnerLocations = [
@@ -82,6 +116,41 @@ export function DistributionPartnerDashboard({ userName }: DistributionPartnerDa
     { month: 'October', referrals: 15, earnings: 825 },
   ];
 
+  // White-label pricing plans
+  const whiteLabelPlans = [
+    {
+      id: 'monthly',
+      name: 'Monthly',
+      price: 49,
+      period: '/month',
+      features: [
+        'Custom branded directory',
+        'Your own subdomain',
+        'Full design customization',
+        'Analytics dashboard',
+        'Add businesses from marketplace',
+        'Email support',
+      ],
+    },
+    {
+      id: 'annual',
+      name: 'Annual',
+      price: 499,
+      pricePerMonth: '41.58',
+      period: '/year',
+      savings: 'Save $89/year',
+      popular: true,
+      features: [
+        'Everything in Monthly',
+        'Priority support',
+        'Advanced analytics',
+        'Custom domain setup',
+        'Dedicated account manager',
+        'Two months free',
+      ],
+    },
+  ];
+
   const copyReferralLink = async () => {
     const referralLink = 'https://preferreddeals.com/signup?ref=DIST12345';
     try {
@@ -109,45 +178,58 @@ export function DistributionPartnerDashboard({ userName }: DistributionPartnerDa
     }
   };
 
+  const handleUpgradeToWhiteLabel = () => {
+    setShowUpgradeDialog(false);
+    setShowPaymentDialog(true);
+  };
+
+  const handlePaymentCardChange = (field: string, value: string) => {
+    setPaymentCardData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleConfirmPayment = () => {
+    // Simulate payment processing
+    toast.success('White-label platform activated! Redirecting...');
+    setShowPaymentDialog(false);
+    setPaymentCardData({ cardNumber: '', expiry: '', cvc: '', name: '' });
+    setHasWhiteLabel(true);
+    // After a short delay, show the white-label platform
+    setTimeout(() => {
+      setShowWhiteLabel(true);
+    }, 1000);
+  };
+
+  const handleNfcStandsRequest = () => {
+    const items = [];
+    if (nfcStandsQuantity > 0) items.push(`${nfcStandsQuantity} NFC stand${nfcStandsQuantity > 1 ? 's' : ''}`);
+    if (nfcKeychainsQuantity > 0) items.push(`${nfcKeychainsQuantity} NFC keychain${nfcKeychainsQuantity > 1 ? 's' : ''}`);
+    
+    const itemsText = items.length > 0 ? items.join(' and ') : 'your items';
+    toast.success(`Request submitted for ${itemsText}! We'll ship them to you within 5-7 business days.`);
+    setShowNfcStandsDialog(false);
+    // Reset form
+    setNfcStandsQuantity(5);
+    setNfcKeychainsQuantity(25);
+    setNfcDeliveryAddress({ street: '', city: '', state: '', zip: '' });
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       <div className="mb-6 sm:mb-8">
         <h1 className="mb-2">Distribution Partner Dashboard</h1>
-        <p className="text-muted-foreground text-sm sm:text-base">Track your referrals and earnings, {userName}</p>
+        <p className="text-muted-foreground text-sm sm:text-base">Track your link performance, {userName}</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
+        <Card className="border-2 border-gray-900">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-2 sm:mb-4">
-              <Users className="w-6 h-6 sm:w-8 sm:h-8 text-gray-900" />
+              <Eye className="w-6 h-6 sm:w-8 sm:h-8 text-gray-900" />
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Referrals</p>
-            <p className="text-2xl sm:text-3xl">{stats.totalReferrals}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Clicks</p>
+            <p className="text-2xl sm:text-3xl">{stats.totalClicks.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground mt-1">All time</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-2 sm:mb-4">
-              <Award className="w-6 h-6 sm:w-8 sm:h-8 text-gray-700" />
-            </div>
-            <p className="text-xs sm:text-sm text-muted-foreground mb-1">Active Businesses</p>
-            <p className="text-2xl sm:text-3xl">{stats.activeBusinesses}</p>
-            <p className="text-xs text-muted-foreground mt-1">Currently active</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-2 sm:mb-4">
-              <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-gray-900" />
-            </div>
-            <p className="text-xs sm:text-sm text-muted-foreground mb-1">This Month</p>
-            <p className="text-2xl sm:text-3xl">${stats.monthlyCommission.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-1">Commission earned</p>
           </CardContent>
         </Card>
 
@@ -156,9 +238,23 @@ export function DistributionPartnerDashboard({ userName }: DistributionPartnerDa
             <div className="flex items-center justify-between mb-2 sm:mb-4">
               <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-gray-700" />
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground mb-1">Conversion Rate</p>
-            <p className="text-2xl sm:text-3xl">{stats.conversionRate}%</p>
-            <p className="text-xs text-muted-foreground mt-1">Referrals to active</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-1">This Month</p>
+            <p className="text-2xl sm:text-3xl">{stats.thisMonthClicks.toLocaleString()}</p>
+            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" />
+              +{stats.clickGrowth}% from last month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-gray-700" />
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-1">This Week</p>
+            <p className="text-2xl sm:text-3xl">{stats.thisWeekClicks.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-1">Last 7 days</p>
           </CardContent>
         </Card>
       </div>
@@ -173,7 +269,7 @@ export function DistributionPartnerDashboard({ userName }: DistributionPartnerDa
             {/* Navigation Arrows */}
             <button
               onClick={() => {
-                const tabs = ['overview', 'referrals', 'locations', 'earnings'];
+                const tabs = ['overview', 'billing'];
                 const currentIndex = tabs.indexOf(activeTab);
                 const prevIndex = currentIndex === 0 ? tabs.length - 1 : currentIndex - 1;
                 setActiveTab(tabs[prevIndex]);
@@ -186,7 +282,7 @@ export function DistributionPartnerDashboard({ userName }: DistributionPartnerDa
             
             <button
               onClick={() => {
-                const tabs = ['overview', 'referrals', 'locations', 'earnings'];
+                const tabs = ['overview', 'billing'];
                 const currentIndex = tabs.indexOf(activeTab);
                 const nextIndex = currentIndex === tabs.length - 1 ? 0 : currentIndex + 1;
                 setActiveTab(tabs[nextIndex]);
@@ -200,7 +296,7 @@ export function DistributionPartnerDashboard({ userName }: DistributionPartnerDa
 
           {/* Carousel Indicators (Dots) */}
           <div className="flex justify-center gap-2">
-            {['overview', 'referrals', 'locations', 'earnings'].map((tab) => (
+            {['overview', 'billing'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -216,63 +312,65 @@ export function DistributionPartnerDashboard({ userName }: DistributionPartnerDa
         </div>
 
         <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-          {/* White-Label Platform Card */}
-          <Card className="border-2 border-gray-900 bg-gradient-to-br from-gray-50 to-white">
-            <CardHeader className="p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
-                <div className="flex items-start gap-3 w-full">
-                  <div className="p-2 sm:p-3 bg-gray-900 rounded-lg flex-shrink-0">
-                    <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          {/* White-Label Platform Card - Only for white-label users */}
+          {hasWhiteLabel && (
+            <Card className="border-2 border-gray-900 bg-gradient-to-br from-gray-50 to-white">
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 w-full">
+                    <div className="p-2 sm:p-3 bg-gray-900 rounded-lg flex-shrink-0">
+                      <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-base sm:text-lg">Your White-Label Platform</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">Manage your community directory with your own branding</CardDescription>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="text-base sm:text-lg">Your White-Label Platform</CardTitle>
-                    <CardDescription className="text-xs sm:text-sm">Manage your community directory with your own branding</CardDescription>
+                  <Badge className="bg-gray-900 self-start sm:self-auto text-xs">Premium</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
+                <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="p-3 sm:p-4 bg-white rounded-lg border">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Your Platform URL</p>
+                    <p className="text-xs sm:text-sm font-medium break-all">community-connect.preferreddeals.com</p>
+                  </div>
+                  <div className="p-3 sm:p-4 bg-white rounded-lg border">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Pending Approvals</p>
+                    <p className="text-xl sm:text-2xl">5</p>
+                  </div>
+                  <div className="p-3 sm:p-4 bg-white rounded-lg border">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Businesses</p>
+                    <p className="text-xl sm:text-2xl">42</p>
                   </div>
                 </div>
-                <Badge className="bg-gray-900 self-start sm:self-auto text-xs">Premium</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
-              <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
-                <div className="p-3 sm:p-4 bg-white rounded-lg border">
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Your Platform URL</p>
-                  <p className="text-xs sm:text-sm font-medium break-all">community-connect.preferreddeals.com</p>
+                
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button className="flex-1" onClick={() => setShowWhiteLabel(true)}>
+                    <Globe className="w-4 h-4 mr-2" />
+                    <span className="text-sm">Manage Platform</span>
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                  <Button variant="outline" className="flex-1">
+                    <Share2 className="w-4 h-4 mr-2" />
+                    <span className="text-sm">Share Platform Link</span>
+                  </Button>
                 </div>
-                <div className="p-3 sm:p-4 bg-white rounded-lg border">
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Pending Approvals</p>
-                  <p className="text-xl sm:text-2xl">5</p>
-                </div>
-                <div className="p-3 sm:p-4 bg-white rounded-lg border">
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Businesses</p>
-                  <p className="text-xl sm:text-2xl">42</p>
-                </div>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button className="flex-1" onClick={() => setShowWhiteLabel(true)}>
-                  <Globe className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Manage Platform</span>
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-                <Button variant="outline" className="flex-1">
-                  <Share2 className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Share Platform Link</span>
-                </Button>
-              </div>
 
-              <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs sm:text-sm">
-                  <span className="font-medium">New!</span> Manage business approvals, customize branding, and set up your custom domain all in one place.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs sm:text-sm">
+                    <span className="font-medium">New!</span> Manage business approvals, customize branding, and set up your custom domain all in one place.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Referral Link Card */}
           <Card className="border-2">
             <CardHeader className="p-4 sm:p-6">
               <CardTitle className="text-base sm:text-lg">Your Referral Link</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">Share this link with potential business partners</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Share this link with communities to distribute the Preferred Deals directory</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
               <div className="flex flex-col sm:flex-row gap-2">
@@ -292,358 +390,120 @@ export function DistributionPartnerDashboard({ userName }: DistributionPartnerDa
                   <Share2 className="w-4 h-4 mr-2" />
                   Share on Social Media
                 </Button>
-                <Button variant="outline" className="flex-1 text-xs sm:text-sm">
-                  <Gift className="w-4 h-4 mr-2" />
-                  Download Materials
+                <Button variant="outline" className="flex-1 text-xs sm:text-sm" onClick={() => setShowNfcStandsDialog(true)}>
+                  <Package className="w-4 h-4 mr-2" />
+                  Request NFC Stands
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
-            {/* Earnings Summary */}
-            <Card>
+          {/* Upgrade to White-Label Card - Visible for development */}
+          {true && (
+            <Card className="border-2 border-gray-900 bg-gradient-to-br from-gray-50 to-white">
               <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="text-base sm:text-lg">Earnings Summary</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Your commission breakdown</CardDescription>
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 w-full">
+                    <div className="p-2 sm:p-3 bg-gray-900 rounded-lg flex-shrink-0">
+                      <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-base sm:text-lg">Upgrade to White-Label Directory</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">Get your own branded community directory platform</CardDescription>
+                    </div>
+                  </div>
+                  <Badge className="bg-gray-900 self-start sm:self-auto text-xs">Premium</Badge>
+                </div>
               </CardHeader>
               <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs sm:text-sm">
-                    <span className="text-muted-foreground">Progress to next payout</span>
-                    <span>${stats.monthlyCommission} / $2,000</span>
-                  </div>
-                  <Progress value={62.5} />
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Earned</p>
-                    <p className="text-xl sm:text-2xl">${stats.lifetimeEarnings.toLocaleString()}</p>
-                  </div>
-                  <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">Pending</p>
-                    <p className="text-xl sm:text-2xl">${stats.pendingCommission}</p>
-                  </div>
-                </div>
-                <Button className="w-full text-sm">Request Payout</Button>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card>
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="text-base sm:text-lg">Recent Referrals</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Your latest business referrals</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4 sm:p-6 pt-0">
-                <div className="space-y-2 sm:space-y-3">
-                  {recentReferrals.slice(0, 4).map((referral) => (
-                    <div key={referral.id} className="flex items-center justify-between p-2 sm:p-3 border rounded-lg gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs sm:text-sm truncate">{referral.business}</p>
-                        <p className="text-xs text-muted-foreground">{referral.joinDate}</p>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Create your own branded directory platform with custom domain, branding, and full control over business approvals.
+                  </p>
+                  
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="p-3 bg-white rounded-lg border">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle className="w-4 h-4" />
+                        <p className="text-sm">Custom Domain</p>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge variant={referral.status === 'Active' ? 'default' : 'secondary'} className="text-xs">
-                          {referral.status}
-                        </Badge>
-                        <span className="text-xs sm:text-sm">${referral.commission}</span>
-                      </div>
+                      <p className="text-xs text-muted-foreground">Your own branded URL</p>
                     </div>
-                  ))}
+                    <div className="p-3 bg-white rounded-lg border">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle className="w-4 h-4" />
+                        <p className="text-sm">Business Approvals</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Control which businesses join</p>
+                    </div>
+                    <div className="p-3 bg-white rounded-lg border">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle className="w-4 h-4" />
+                        <p className="text-sm">Custom Branding</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Your logo, colors & style</p>
+                    </div>
+                    <div className="p-3 bg-white rounded-lg border">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle className="w-4 h-4" />
+                        <p className="text-sm">Analytics Dashboard</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Track your community growth</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <Button className="w-full" onClick={() => setShowUpgradeDialog(true)}>
+                  <Globe className="w-4 h-4 mr-2" />
+                  <span className="text-sm">Upgrade to White-Label Directory</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+
+                <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs sm:text-sm">
+                    <span className="font-medium">Perfect for communities!</span> Create a directory for your neighborhood, HOA, business association, or any community group.
+                  </p>
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Tips Card */}
-          <Card className="bg-gradient-to-br from-gray-50 to-gray-100">
-            <CardHeader>
-              <CardTitle>💡 Maximize Your Earnings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>Focus on businesses that would benefit from premium features for higher commissions</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>Follow up with pending referrals to improve conversion rates</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <span>Share success stories from your active referrals to build trust</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
+          )}
         </TabsContent>
 
-        <TabsContent value="referrals">
+        <TabsContent value="billing" className="space-y-4 sm:space-y-6">
+          {/* Payment Methods */}
           <Card>
             <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base sm:text-lg">All Referrals</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">Complete list of your business referrals</CardDescription>
+              <CardTitle className="text-base sm:text-lg">Payment Methods</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Manage your payment methods for white-label subscriptions and services</CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
-              {/* Mobile Card View */}
-              <div className="md:hidden space-y-3">
-                {recentReferrals.map((referral) => (
-                  <div key={referral.id} className="p-4 border rounded-lg space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium truncate">{referral.business}</p>
-                        <p className="text-xs text-muted-foreground">{referral.owner}</p>
-                      </div>
-                      <Badge variant={referral.status === 'Active' ? 'default' : 'secondary'} className="text-xs flex-shrink-0">
-                        {referral.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={referral.plan === 'Featured' ? 'default' : 'secondary'} className="text-xs">
-                          {referral.plan}
-                        </Badge>
-                        <span className="text-muted-foreground">{referral.joinDate}</span>
-                      </div>
-                      <span className="font-medium">${referral.commission}</span>
+              <div className="border rounded-lg p-3 sm:p-4 mb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="w-6 h-6 text-gray-500" />
+                    <div>
+                      <p className="text-xs sm:text-sm">Visa ending in 4242</p>
+                      <p className="text-xs text-gray-500">Expires 12/26</p>
                     </div>
                   </div>
-                ))}
+                  <Badge variant="outline" className="text-xs">Default</Badge>
+                </div>
               </div>
-
-              {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-xs sm:text-sm">Business Name</TableHead>
-                      <TableHead className="text-xs sm:text-sm">Owner</TableHead>
-                      <TableHead className="text-xs sm:text-sm">Plan</TableHead>
-                      <TableHead className="text-xs sm:text-sm">Status</TableHead>
-                      <TableHead className="text-xs sm:text-sm">Join Date</TableHead>
-                      <TableHead className="text-xs sm:text-sm">Commission</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentReferrals.map((referral) => (
-                      <TableRow key={referral.id}>
-                        <TableCell className="text-xs sm:text-sm">{referral.business}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">{referral.owner}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">
-                          <Badge variant={referral.plan === 'Featured' ? 'default' : 'secondary'} className="text-xs">
-                            {referral.plan}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs sm:text-sm">
-                          <Badge variant={referral.status === 'Active' ? 'default' : 'secondary'} className="text-xs">
-                            {referral.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs sm:text-sm">{referral.joinDate}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">${referral.commission}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <Button variant="outline" size="sm" className="w-full text-xs sm:text-sm" onClick={() => setShowAddPayment(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Payment Method
+              </Button>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="locations">
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <CardTitle className="text-base sm:text-lg">Location Performance</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Track business activity by city</CardDescription>
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <input
-                    type="text"
-                    placeholder="Search locations..."
-                    className="px-3 py-2 border rounded-md text-sm w-full sm:w-64"
-                  />
-                  <Button variant="outline" size="icon" className="flex-shrink-0">
-                    <Search className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
-              {/* Location Stats Summary */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-                <Card className="border-2">
-                  <CardContent className="p-3 sm:p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Total Cities</p>
-                        <p className="text-xl sm:text-2xl">{partnerLocations.length}</p>
-                      </div>
-                      <Map className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border-2">
-                  <CardContent className="p-3 sm:p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Total Businesses</p>
-                        <p className="text-xl sm:text-2xl">{partnerLocations.reduce((sum, loc) => sum + loc.businesses, 0)}</p>
-                      </div>
-                      <Package className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border-2">
-                  <CardContent className="p-3 sm:p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Active Deals</p>
-                        <p className="text-xl sm:text-2xl">{partnerLocations.reduce((sum, loc) => sum + loc.activeDeals, 0)}</p>
-                      </div>
-                      <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border-2">
-                  <CardContent className="p-3 sm:p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Total Revenue</p>
-                        <p className="text-xl sm:text-2xl">${partnerLocations.reduce((sum, loc) => sum + loc.totalRevenue, 0)}</p>
-                      </div>
-                      <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Locations Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {partnerLocations.map((location) => (
-                  <Card key={location.id} className="border-2 hover:border-gray-900 transition-colors cursor-pointer" onClick={() => {
-                    setSelectedLocation(location);
-                    setLocationDialogOpen(true);
-                  }}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-5 h-5 text-gray-700" />
-                          <div>
-                            <h3 className="font-semibold">{location.city}</h3>
-                            <p className="text-xs text-muted-foreground">{location.state}</p>
-                          </div>
-                        </div>
-                        <Badge variant="default" className="text-xs">{location.status}</Badge>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Businesses</span>
-                          <span className="font-medium">{location.businesses}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Active Deals</span>
-                          <span className="font-medium">{location.activeDeals}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Monthly Growth</span>
-                          <span className="font-medium text-green-600 flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3" />
-                            {location.monthlyGrowth}%
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Revenue</span>
-                          <span className="font-medium">${location.totalRevenue}</span>
-                        </div>
-                      </div>
-
-                      <Button variant="outline" size="sm" className="w-full mt-3 text-xs">
-                        <Eye className="w-3 h-3 mr-2" />
-                        View Details
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="earnings">
-          <div className="space-y-4 sm:space-y-6">
-            <Card>
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="text-base sm:text-lg">Earnings History</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Monthly earnings breakdown</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4 sm:p-6 pt-0 overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-xs sm:text-sm">Month</TableHead>
-                      <TableHead className="text-xs sm:text-sm">Referrals</TableHead>
-                      <TableHead className="text-xs sm:text-sm">Earnings</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {monthlyBreakdown.map((month) => (
-                      <TableRow key={month.month}>
-                        <TableCell className="text-xs sm:text-sm">{month.month}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">{month.referrals}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">${month.earnings.toLocaleString()}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="p-4 sm:p-6">
-                <CardTitle className="text-base sm:text-lg">Commission Structure</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">Earn more with premium referrals</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4 sm:p-6 pt-0">
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="p-3 sm:p-4 border rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm sm:text-base">Basic Plan</span>
-                      <Badge variant="secondary" className="text-xs">$30/referral</Badge>
-                    </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Standard business listing</p>
-                  </div>
-                  <div className="p-3 sm:p-4 border rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm sm:text-base">Premium Plan</span>
-                      <Badge variant="default" className="text-xs">$50/referral</Badge>
-                    </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Enhanced visibility and features</p>
-                  </div>
-                  <div className="p-3 sm:p-4 border rounded-lg bg-gray-50">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm sm:text-base">Featured Plan</span>
-                      <Badge className="bg-black text-white text-xs">$75/referral</Badge>
-                    </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Top placement and maximum exposure</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
 
       {/* Business Detail Dialog */}
       <Dialog open={businessDetailOpen} onOpenChange={setBusinessDetailOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" aria-describedby="business-detail-description">
           <DialogHeader>
             <DialogTitle>Business Details</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="business-detail-description">
               Learn more about this business before adding to your directory
             </DialogDescription>
           </DialogHeader>
@@ -728,10 +588,10 @@ export function DistributionPartnerDashboard({ userName }: DistributionPartnerDa
 
       {/* Location Details Dialog */}
       <Dialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" aria-describedby="location-details-description">
           <DialogHeader>
             <DialogTitle>Location Details</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="location-details-description">
               Detailed statistics and performance for this location
             </DialogDescription>
           </DialogHeader>
@@ -835,6 +695,517 @@ export function DistributionPartnerDashboard({ userName }: DistributionPartnerDa
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add Payment Method Dialog */}
+      <Dialog open={showAddPayment} onOpenChange={setShowAddPayment}>
+        <DialogContent className="max-w-md" aria-describedby="add-payment-description">
+          <DialogHeader>
+            <DialogTitle>Add Payment Method</DialogTitle>
+            <DialogDescription id="add-payment-description">
+              Add a new credit or debit card to your account
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="card-number">Card Number</Label>
+              <Input 
+                id="card-number" 
+                placeholder="1234 5678 9012 3456"
+                maxLength={19}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="expiry">Expiry Date</Label>
+                <Input 
+                  id="expiry" 
+                  placeholder="MM/YY"
+                  maxLength={5}
+                />
+              </div>
+              <div>
+                <Label htmlFor="cvv">CVV</Label>
+                <Input 
+                  id="cvv" 
+                  type="password"
+                  placeholder="123"
+                  maxLength={4}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="cardholder-name">Cardholder Name</Label>
+              <Input 
+                id="cardholder-name" 
+                placeholder="John Doe"
+              />
+            </div>
+
+            <Separator />
+
+            <div>
+              <Label htmlFor="billing-address">Billing Address</Label>
+              <Input 
+                id="billing-address" 
+                placeholder="123 Main St"
+                className="mb-2"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="city">City</Label>
+                <Input 
+                  id="city" 
+                  placeholder="New York"
+                />
+              </div>
+              <div>
+                <Label htmlFor="state">State</Label>
+                <Input 
+                  id="state" 
+                  placeholder="NY"
+                  maxLength={2}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="zip">ZIP Code</Label>
+              <Input 
+                id="zip" 
+                placeholder="10001"
+                maxLength={10}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowAddPayment(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                toast.success('Payment method added successfully!');
+                setShowAddPayment(false);
+              }}
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Add Card
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upgrade to White-Label Dialog */}
+      <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <DialogContent className="sm:max-w-2xl" aria-describedby="upgrade-white-label-description">
+          <DialogHeader>
+            <DialogTitle>Upgrade to White-Label Platform</DialogTitle>
+            <DialogDescription id="upgrade-white-label-description">
+              Launch your own branded directory and grow your business
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid gap-4">
+              {whiteLabelPlans.map((plan) => (
+                <div
+                  key={plan.id}
+                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    selectedPlan === plan.id
+                      ? 'border-black bg-gray-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  } ${plan.popular ? 'relative' : ''}`}
+                  onClick={() => setSelectedPlan(plan.id)}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-black text-white">Most Popular</Badge>
+                    </div>
+                  )}
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="font-medium">{plan.name}</h3>
+                      {plan.savings && (
+                        <p className="text-sm text-green-600 mt-1">{plan.savings}</p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl">${plan.price}</p>
+                      {plan.pricePerMonth && (
+                        <p className="text-sm text-gray-500">${plan.pricePerMonth}/month</p>
+                      )}
+                      <p className="text-sm text-gray-500">{plan.period}</p>
+                    </div>
+                  </div>
+                  <ul className="space-y-2 text-sm">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUpgradeDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpgradeToWhiteLabel}>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Continue to Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Confirmation Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="max-w-md" aria-describedby="payment-dialog-description">
+          <DialogHeader>
+            <DialogTitle>Confirm Payment</DialogTitle>
+            <DialogDescription id="payment-dialog-description">
+              Complete your payment to activate {whiteLabelPlans.find(p => p.id === selectedPlan)?.name} White-Label Platform
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Plan Summary */}
+            <div className="bg-muted p-4 rounded-lg">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <p className="font-medium">{whiteLabelPlans.find(p => p.id === selectedPlan)?.name} Plan</p>
+                  <p className="text-sm text-muted-foreground">White-Label Directory Platform</p>
+                </div>
+                <p className="text-2xl">${whiteLabelPlans.find(p => p.id === selectedPlan)?.price}</p>
+              </div>
+              {whiteLabelPlans.find(p => p.id === selectedPlan)?.savings && (
+                <Badge variant="secondary" className="mt-2">
+                  {whiteLabelPlans.find(p => p.id === selectedPlan)?.savings}
+                </Badge>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Payment Method Selection */}
+            <div className="space-y-3">
+              <Label>Payment Method</Label>
+              
+              {paymentMethods.length > 0 && (
+                <div className="space-y-2">
+                  <div 
+                    className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                      useExistingCard ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground'
+                    }`}
+                    onClick={() => setUseExistingCard(true)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                          useExistingCard ? 'border-primary' : 'border-muted-foreground'
+                        }`}>
+                          {useExistingCard && <div className="w-2 h-2 rounded-full bg-primary" />}
+                        </div>
+                        <CreditCard className="w-5 h-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">{paymentMethods[0].type} •••• {paymentMethods[0].last4}</p>
+                          <p className="text-sm text-muted-foreground">Expires {paymentMethods[0].expiry}</p>
+                        </div>
+                      </div>
+                      {paymentMethods[0].isDefault && (
+                        <Badge variant="secondary">Default</Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div 
+                className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                  !useExistingCard ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground'
+                }`}
+                onClick={() => setUseExistingCard(false)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    !useExistingCard ? 'border-primary' : 'border-muted-foreground'
+                  }`}>
+                    {!useExistingCard && <div className="w-2 h-2 rounded-full bg-primary" />}
+                  </div>
+                  <Plus className="w-5 h-5 text-muted-foreground" />
+                  <p className="font-medium">Add new payment method</p>
+                </div>
+              </div>
+
+              {/* New Card Form */}
+              {!useExistingCard && (
+                <div className="space-y-3 pt-3 border-t">
+                  <div>
+                    <Label htmlFor="payment-card-number">Card Number</Label>
+                    <Input
+                      id="payment-card-number"
+                      placeholder="1234 5678 9012 3456"
+                      value={paymentCardData.cardNumber}
+                      onChange={(e) => handlePaymentCardChange('cardNumber', e.target.value)}
+                      maxLength={16}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="payment-expiry">Expiry (MM/YY)</Label>
+                      <Input
+                        id="payment-expiry"
+                        placeholder="12/26"
+                        value={paymentCardData.expiry}
+                        onChange={(e) => handlePaymentCardChange('expiry', e.target.value)}
+                        maxLength={5}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="payment-cvc">CVC</Label>
+                      <Input
+                        id="payment-cvc"
+                        placeholder="123"
+                        value={paymentCardData.cvc}
+                        onChange={(e) => handlePaymentCardChange('cvc', e.target.value)}
+                        maxLength={4}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="payment-cardholder">Cardholder Name</Label>
+                    <Input
+                      id="payment-cardholder"
+                      placeholder="John Doe"
+                      value={paymentCardData.name}
+                      onChange={(e) => handlePaymentCardChange('name', e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowPaymentDialog(false);
+                setShowUpgradeDialog(true);
+              }}
+            >
+              Back
+            </Button>
+            <Button onClick={handleConfirmPayment}>
+              <Check className="w-4 h-4 mr-2" />
+              Confirm Payment - ${whiteLabelPlans.find(p => p.id === selectedPlan)?.price}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Request NFC Stands Dialog */}
+      <Dialog open={showNfcStandsDialog} onOpenChange={setShowNfcStandsDialog}>
+        <DialogContent className="sm:max-w-lg" aria-describedby="nfc-stands-description">
+          <DialogHeader>
+            <DialogTitle>Request Free NFC Materials</DialogTitle>
+            <DialogDescription id="nfc-stands-description">
+              Order complimentary NFC stands and keychains for your distribution network
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Free Banner */}
+            <div className="bg-black text-white p-3 rounded-lg text-center">
+              <p className="text-sm">🎉 All NFC materials are completely FREE for distribution partners!</p>
+            </div>
+
+            {/* NFC Stands Quantity */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="nfc-stands-quantity">Preferred Deals NFC Stands</Label>
+                <Badge variant="outline">Max: 10</Badge>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setNfcStandsQuantity(Math.max(0, nfcStandsQuantity - 1))}
+                >
+                  -
+                </Button>
+                <Input
+                  id="nfc-stands-quantity"
+                  type="number"
+                  value={nfcStandsQuantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    setNfcStandsQuantity(Math.min(10, Math.max(0, val)));
+                  }}
+                  className="text-center w-20"
+                  min="0"
+                  max="10"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setNfcStandsQuantity(Math.min(10, nfcStandsQuantity + 1))}
+                  disabled={nfcStandsQuantity >= 10}
+                >
+                  +
+                </Button>
+                <span className="text-sm text-muted-foreground ml-2">stands</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Desktop NFC-enabled stands for businesses
+              </p>
+            </div>
+
+            {/* NFC Keychains Quantity */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="nfc-keychains-quantity">NFC Smart Keychains</Label>
+                <Badge variant="outline">Max: 50</Badge>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setNfcKeychainsQuantity(Math.max(0, nfcKeychainsQuantity - 1))}
+                >
+                  -
+                </Button>
+                <Input
+                  id="nfc-keychains-quantity"
+                  type="number"
+                  value={nfcKeychainsQuantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    setNfcKeychainsQuantity(Math.min(50, Math.max(0, val)));
+                  }}
+                  className="text-center w-20"
+                  min="0"
+                  max="50"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setNfcKeychainsQuantity(Math.min(50, nfcKeychainsQuantity + 1))}
+                  disabled={nfcKeychainsQuantity >= 50}
+                >
+                  +
+                </Button>
+                <span className="text-sm text-muted-foreground ml-2">keychains</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Portable NFC keychains for on-the-go sharing
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* Delivery Address */}
+            <div className="space-y-3">
+              <Label>Delivery Address</Label>
+              
+              <div>
+                <Label htmlFor="nfc-street" className="text-sm">Street Address</Label>
+                <Input
+                  id="nfc-street"
+                  placeholder="123 Main St"
+                  value={nfcDeliveryAddress.street}
+                  onChange={(e) => setNfcDeliveryAddress(prev => ({ ...prev, street: e.target.value }))}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="nfc-city" className="text-sm">City</Label>
+                  <Input
+                    id="nfc-city"
+                    placeholder="New York"
+                    value={nfcDeliveryAddress.city}
+                    onChange={(e) => setNfcDeliveryAddress(prev => ({ ...prev, city: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="nfc-state" className="text-sm">State</Label>
+                  <Input
+                    id="nfc-state"
+                    placeholder="NY"
+                    maxLength={2}
+                    value={nfcDeliveryAddress.state}
+                    onChange={(e) => setNfcDeliveryAddress(prev => ({ ...prev, state: e.target.value.toUpperCase() }))}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="nfc-zip" className="text-sm">ZIP Code</Label>
+                <Input
+                  id="nfc-zip"
+                  placeholder="10001"
+                  maxLength={5}
+                  value={nfcDeliveryAddress.zip}
+                  onChange={(e) => setNfcDeliveryAddress(prev => ({ ...prev, zip: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            {/* Summary */}
+            <div className="bg-muted p-4 rounded-lg space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">NFC Stands:</span>
+                <span>{nfcStandsQuantity}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">NFC Keychains:</span>
+                <span>{nfcKeychainsQuantity}</span>
+              </div>
+              <Separator className="my-2" />
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Total Cost:</span>
+                <span className="text-lg">FREE</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Ships within 5-7 business days
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowNfcStandsDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleNfcStandsRequest}>
+              <Package className="w-4 h-4 mr-2" />
+              Submit Request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* White-Label Platform Management */}
+      {showWhiteLabel && (
+        <WhiteLabelPlatform 
+          onClose={() => setShowWhiteLabel(false)} 
+        />
+      )}
     </div>
   );
 }

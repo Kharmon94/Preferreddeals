@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Edit, Eye, TrendingUp, Users, Phone, Mail, DollarSign, CreditCard, Download, Plus, Trash2, Check, CheckCircle, Store, ShoppingBag, Sparkles } from 'lucide-react';
+import { Edit, Eye, TrendingUp, Users, Phone, Mail, DollarSign, CreditCard, Download, Plus, Trash2, Check, CheckCircle, Store, ShoppingBag, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
@@ -215,6 +215,16 @@ export function BusinessDashboard({ businessId, onNavigate }: BusinessDashboardP
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradingListingId, setUpgradingListingId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState(premiumPlans[0]);
+  
+  // Payment confirmation state
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [useExistingCard, setUseExistingCard] = useState(true);
+  const [paymentCardData, setPaymentCardData] = useState({
+    cardNumber: '',
+    expiry: '',
+    cvc: '',
+    name: '',
+  });
 
   // Check if user has any active premium subscription
   const hasPremiumSubscription = listings.some(listing => listing.isPremium);
@@ -315,6 +325,37 @@ export function BusinessDashboard({ businessId, onNavigate }: BusinessDashboardP
   };
 
   const handleUpgradeToPremium = () => {
+    // Close upgrade modal and open payment dialog
+    setShowUpgradeModal(false);
+    setShowPaymentDialog(true);
+    // Set default to use existing card if available
+    setUseExistingCard(paymentMethods.length > 0);
+  };
+
+  const handleConfirmPayment = () => {
+    // Validate payment method
+    if (!useExistingCard) {
+      if (!paymentCardData.cardNumber || !paymentCardData.expiry || !paymentCardData.cvc || !paymentCardData.name) {
+        toast.error('Please fill in all card details.');
+        return;
+      }
+      
+      // Add the new card
+      const last4 = paymentCardData.cardNumber.slice(-4);
+      const cardType = paymentCardData.cardNumber.startsWith('4') ? 'Visa' : 
+                       paymentCardData.cardNumber.startsWith('5') ? 'Mastercard' : 'Card';
+      
+      const newPaymentMethod = {
+        id: String(paymentMethods.length + 1),
+        type: cardType,
+        last4,
+        expiry: paymentCardData.expiry,
+        isDefault: paymentMethods.length === 0,
+      };
+
+      setPaymentMethods([...paymentMethods, newPaymentMethod]);
+    }
+
     if (upgradingListingId) {
       const nextBillingDate = new Date();
       if (selectedPlan.id === '1-month') {
@@ -341,13 +382,16 @@ export function BusinessDashboard({ businessId, onNavigate }: BusinessDashboardP
             } 
           : listing
       ));
-      toast('Success! Your listing has been upgraded to premium.');
-      setShowUpgradeModal(false);
+      toast.success(`Success! Your listing has been upgraded to ${selectedPlan.name}.`);
+      setShowPaymentDialog(false);
       setUpgradingListingId(null);
+      setPaymentCardData({ cardNumber: '', expiry: '', cvc: '', name: '' });
     }
   };
 
   const premiumListings = listings.filter(l => l.isPremium);
+  
+  const [activeTab, setActiveTab] = useState('analytics');
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -356,12 +400,59 @@ export function BusinessDashboard({ businessId, onNavigate }: BusinessDashboardP
         <p className="text-gray-600">Manage your listings and track performance</p>
       </div>
 
-      <Tabs defaultValue="analytics" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="listings">My Listings</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+        {/* Slider Navigation */}
+        <div className="space-y-3 sm:space-y-4">
+          {/* Tab Name with Arrows */}
+          <div className="relative text-center">
+            <h2 className="text-xl sm:text-2xl capitalize">
+              {activeTab === 'listings' ? 'My Listings' : activeTab}
+            </h2>
+            
+            {/* Navigation Arrows */}
+            <button
+              onClick={() => {
+                const tabs = ['analytics', 'listings', 'billing'];
+                const currentIndex = tabs.indexOf(activeTab);
+                const prevIndex = currentIndex === 0 ? tabs.length - 1 : currentIndex - 1;
+                setActiveTab(tabs[prevIndex]);
+              }}
+              className="absolute left-0 sm:left-4 top-1/2 -translate-y-1/2 size-8 sm:size-10 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-900 flex items-center justify-center shadow-sm transition-all"
+              aria-label="Previous section"
+            >
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+            
+            <button
+              onClick={() => {
+                const tabs = ['analytics', 'listings', 'billing'];
+                const currentIndex = tabs.indexOf(activeTab);
+                const nextIndex = currentIndex === tabs.length - 1 ? 0 : currentIndex + 1;
+                setActiveTab(tabs[nextIndex]);
+              }}
+              className="absolute right-0 sm:right-4 top-1/2 -translate-y-1/2 size-8 sm:size-10 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-900 flex items-center justify-center shadow-sm transition-all"
+              aria-label="Next section"
+            >
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </div>
+
+          {/* Carousel Indicators (Dots) */}
+          <div className="flex justify-center gap-2">
+            {['analytics', 'listings', 'billing'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`h-2 rounded-full transition-all ${
+                  tab === activeTab 
+                    ? 'w-8 bg-black' 
+                    : 'w-2 bg-gray-300 hover:bg-gray-400'
+                }`}
+                aria-label={`Go to ${tab === 'listings' ? 'My Listings' : tab}`}
+              />
+            ))}
+          </div>
+        </div>
 
         {/* Analytics Tab */}
         <TabsContent value="analytics" className="space-y-6">
@@ -1163,6 +1254,196 @@ export function BusinessDashboard({ businessId, onNavigate }: BusinessDashboardP
             <Button onClick={handleUpgradeToPremium}>
               <Sparkles className="w-4 h-4 mr-2" />
               Upgrade for ${selectedPlan.price}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Confirmation Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="sm:max-w-md" aria-describedby="payment-description">
+          <DialogHeader>
+            <DialogTitle>Confirm Payment</DialogTitle>
+            <DialogDescription id="payment-description">
+              Complete your upgrade to {selectedPlan.name} for ${selectedPlan.price}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {paymentMethods.length > 0 ? (
+              <>
+                <div className="space-y-3">
+                  <Label>Payment Method</Label>
+                  
+                  {/* Existing Card Option */}
+                  <div
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      useExistingCard ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setUseExistingCard(true)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <CreditCard className="w-5 h-5" />
+                        <div>
+                          <p className="font-medium">
+                            {paymentMethods.find(pm => pm.isDefault)?.type} ••••{' '}
+                            {paymentMethods.find(pm => pm.isDefault)?.last4}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Expires {paymentMethods.find(pm => pm.isDefault)?.expiry}
+                          </p>
+                        </div>
+                      </div>
+                      {useExistingCard && <CheckCircle className="w-5 h-5" />}
+                    </div>
+                  </div>
+
+                  {/* Add New Card Option */}
+                  <div
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      !useExistingCard ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setUseExistingCard(false)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Plus className="w-5 h-5" />
+                        <p className="font-medium">Use a different card</p>
+                      </div>
+                      {!useExistingCard && <CheckCircle className="w-5 h-5" />}
+                    </div>
+                  </div>
+                </div>
+
+                {/* New Card Form - Only show if "Use a different card" is selected */}
+                {!useExistingCard && (
+                  <div className="space-y-3 pt-2">
+                    <div>
+                      <Label htmlFor="payment-card-number">Card Number</Label>
+                      <Input
+                        id="payment-card-number"
+                        placeholder="1234 5678 9012 3456"
+                        maxLength={19}
+                        value={paymentCardData.cardNumber}
+                        onChange={(e) => setPaymentCardData({ ...paymentCardData, cardNumber: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="payment-expiry">Expiry</Label>
+                        <Input
+                          id="payment-expiry"
+                          placeholder="MM/YY"
+                          maxLength={5}
+                          value={paymentCardData.expiry}
+                          onChange={(e) => setPaymentCardData({ ...paymentCardData, expiry: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="payment-cvc">CVC</Label>
+                        <Input
+                          id="payment-cvc"
+                          type="password"
+                          placeholder="123"
+                          maxLength={4}
+                          value={paymentCardData.cvc}
+                          onChange={(e) => setPaymentCardData({ ...paymentCardData, cvc: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="payment-name">Cardholder Name</Label>
+                      <Input
+                        id="payment-name"
+                        placeholder="John Doe"
+                        value={paymentCardData.name}
+                        onChange={(e) => setPaymentCardData({ ...paymentCardData, name: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* No Card on File - Show Card Input Form */}
+                <div className="space-y-3">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-900">
+                      <strong>No payment method on file.</strong> Please add a card to complete your upgrade.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="new-card-number">Card Number</Label>
+                    <Input
+                      id="new-card-number"
+                      placeholder="1234 5678 9012 3456"
+                      maxLength={19}
+                      value={paymentCardData.cardNumber}
+                      onChange={(e) => setPaymentCardData({ ...paymentCardData, cardNumber: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="new-expiry">Expiry Date</Label>
+                      <Input
+                        id="new-expiry"
+                        placeholder="MM/YY"
+                        maxLength={5}
+                        value={paymentCardData.expiry}
+                        onChange={(e) => setPaymentCardData({ ...paymentCardData, expiry: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="new-cvc">CVC</Label>
+                      <Input
+                        id="new-cvc"
+                        type="password"
+                        placeholder="123"
+                        maxLength={4}
+                        value={paymentCardData.cvc}
+                        onChange={(e) => setPaymentCardData({ ...paymentCardData, cvc: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="new-name">Cardholder Name</Label>
+                    <Input
+                      id="new-name"
+                      placeholder="John Doe"
+                      value={paymentCardData.name}
+                      onChange={(e) => setPaymentCardData({ ...paymentCardData, name: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Payment Summary */}
+            <div className="border-t pt-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Plan</span>
+                <span>{selectedPlan.name}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Billing Cycle</span>
+                <span>{selectedPlan.duration}</span>
+              </div>
+              <div className="flex justify-between font-medium pt-2 border-t">
+                <span>Total Due Today</span>
+                <span>${selectedPlan.price}</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmPayment}>
+              <CreditCard className="w-4 h-4 mr-2" />
+              Confirm Payment ${selectedPlan.price}
             </Button>
           </DialogFooter>
         </DialogContent>

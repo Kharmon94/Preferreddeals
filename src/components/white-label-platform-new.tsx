@@ -1060,14 +1060,14 @@ export function WhiteLabelPlatform({ onBack, partnerName }: WhiteLabelPlatformPr
 
       {/* Approval/Rejection Dialog */}
       <Dialog open={approvalDialogMode !== null} onOpenChange={(open) => !open && handleCloseDialog()}>
-        <DialogContent className="sm:max-w-[600px]" aria-describedby={undefined}>
+        <DialogContent className="sm:max-w-[600px]" aria-describedby="approval-action-description">
           <DialogHeader>
             <DialogTitle>
               {approvalDialogMode === 'approve' && 'Approve Business'}
               {approvalDialogMode === 'reject' && 'Reject Business Application'}
               {approvalDialogMode === 'view' && 'Business Application Details'}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="approval-action-description">
               {approvalDialogMode === 'approve' && 'Approve this business to add it to your community directory'}
               {approvalDialogMode === 'reject' && 'Provide a reason for rejecting this application'}
               {approvalDialogMode === 'view' && 'Review business application details'}
@@ -1152,10 +1152,10 @@ export function WhiteLabelPlatform({ onBack, partnerName }: WhiteLabelPlatformPr
 
       {/* Platform Settings Dialog with Carousel */}
       <Dialog open={domainSettingsOpen} onOpenChange={setDomainSettingsOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col" aria-describedby={undefined}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col" aria-describedby="platform-settings-desc">
           <DialogHeader>
             <DialogTitle>Platform Settings</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="platform-settings-desc">
               Configure your white-label platform settings, branding, and custom domain
             </DialogDescription>
           </DialogHeader>
@@ -1168,17 +1168,17 @@ export function WhiteLabelPlatform({ onBack, partnerName }: WhiteLabelPlatformPr
             <button
               onClick={() => settingsCarouselApi?.scrollPrev()}
               disabled={settingsTabIndex === 0}
-              className="absolute left-2 top-1/2 -translate-y-1/2 size-8 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+              className="absolute left-0 sm:left-4 top-1/2 -translate-y-1/2 size-8 sm:size-10 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-900 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center shadow-sm transition-all"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             
             <button
               onClick={() => settingsCarouselApi?.scrollNext()}
               disabled={settingsTabIndex === settingsTabs.length - 1}
-              className="absolute right-2 top-1/2 -translate-y-1/2 size-8 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+              className="absolute right-0 sm:right-4 top-1/2 -translate-y-1/2 size-8 sm:size-10 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-900 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center shadow-sm transition-all"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
 
@@ -1559,10 +1559,10 @@ export function WhiteLabelPlatform({ onBack, partnerName }: WhiteLabelPlatformPr
 
       {/* Marketplace Business Detail Dialog */}
       <Dialog open={businessDetailOpen} onOpenChange={setBusinessDetailOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" aria-describedby="marketplace-business-description">
           <DialogHeader>
             <DialogTitle>Business Details</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="marketplace-business-description">
               Learn more about this business before adding to your directory
             </DialogDescription>
           </DialogHeader>

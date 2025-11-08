@@ -49,6 +49,7 @@ interface ListingDetailProps {
   onLoginRequired: () => void;
   savedDeals: string[];
   onToggleSave: (businessId: string) => void;
+  isWhiteLabel?: boolean;
 }
 
 export function ListingDetail({
@@ -59,6 +60,7 @@ export function ListingDetail({
   onLoginRequired,
   savedDeals,
   onToggleSave,
+  isWhiteLabel = false,
 }: ListingDetailProps) {
   const business = businesses.find(b => b.id === businessId);
 
@@ -188,18 +190,7 @@ export function ListingDetail({
                     </span>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant={isSaved ? "default" : "outline"}
-                    size="icon"
-                    onClick={handleSaveToggle}
-                  >
-                    <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={handleShare}>
-                    <Share2 className="w-4 h-4" />
-                  </Button>
-                </div>
+
               </div>
 
               <Separator className="my-4" />
@@ -307,7 +298,7 @@ export function ListingDetail({
                         day === today ? 'font-semibold text-gray-900' : 'text-gray-600'
                       }`}
                     >
-                      <span className="capitalize text-[rgb(255,255,255)]">{day}</span>
+                      <span className="capitalize text-[rgb(0,0,0)]">{day}</span>
                       <span>{business.hours![day as keyof typeof business.hours]}</span>
                     </div>
                   ))}
@@ -321,7 +312,7 @@ export function ListingDetail({
             <Button className="w-full" size="lg">
               Contact Business
             </Button>
-            {business.hasDeals && (
+            {isWhiteLabel && business.hasDeals && (
               <Button className="w-full" size="lg" variant="outline" onClick={handleSaveToggle}>
                 <Heart className={`w-4 h-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
                 {isSaved ? 'Saved to Deals' : 'Save Deal'}
