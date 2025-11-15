@@ -72,6 +72,7 @@
     --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --color-red-50: oklch(.971 .013 17.38);
+    --color-red-100: oklch(.936 .032 17.717);
     --color-red-200: oklch(.885 .062 18.334);
     --color-red-500: oklch(.637 .237 25.331);
     --color-red-600: oklch(.577 .245 27.325);
@@ -1715,6 +1716,10 @@
 
   .bg-red-50 {
     background-color: var(--color-red-50);
+  }
+
+  .bg-red-100 {
+    background-color: var(--color-red-100);
   }
 
   .bg-red-500 {

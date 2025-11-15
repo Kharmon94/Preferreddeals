@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Eye, TrendingUp, MapPin, Phone, Mail, Globe, Clock, Star, Tag, X } from 'lucide-react';
+import { Heart, Eye, TrendingUp, MapPin, Phone, Mail, Globe, Clock, Star, Tag, X, LogOut, Search, Bookmark, MessageCircle, CheckCircle, HelpCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -7,7 +7,7 @@ import { DashboardSwitcher } from './dashboard-switcher';
 import { AdminDashboard } from './admin-dashboard';
 import { PartnerDashboard } from './partner-dashboard';
 import { DistributionPartnerDashboard } from './distribution-partner-dashboard';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Separator } from './ui/separator';
 import { toast } from 'sonner@2.0.3';
@@ -20,11 +20,14 @@ interface UserDashboardProps {
   onDashboardTypeChange?: (type: 'user' | 'partner' | 'distribution' | 'admin') => void;
   isUserLoggedIn?: boolean;
   onToggleSave?: (businessId: string) => void;
+  onLogout?: () => void;
+  isNewUser?: boolean;
 }
 
-export function UserDashboard({ userType, userName, savedDeals, onNavigate, onDashboardTypeChange, isUserLoggedIn = true, onToggleSave }: UserDashboardProps) {
+export function UserDashboard({ userType, userName, savedDeals, onNavigate, onDashboardTypeChange, isUserLoggedIn = true, onToggleSave, onLogout, isNewUser = false }: UserDashboardProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   const [selectedRecommendation, setSelectedRecommendation] = useState<string | null>(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(isNewUser);
 
   // Regular User Dashboard
   if (userType === 'user') {
@@ -128,9 +131,23 @@ export function UserDashboard({ userType, userName, savedDeals, onNavigate, onDa
           <DashboardSwitcher currentType={userType} onTypeChange={onDashboardTypeChange} />
         )}
 
-        <div className="mb-8">
-          <h1 className="mb-2">Welcome back, {userName}!</h1>
-          <p className="text-muted-foreground">Here's what's happening with your saved deals</p>
+        <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="mb-2">Welcome back, {userName}!</h1>
+            <p className="text-muted-foreground">Here's what's happening with your saved deals</p>
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={() => setShowWelcomeModal(true)} className="flex-1 sm:flex-initial">
+              <HelpCircle className="w-4 h-4 mr-2" />
+              Help
+            </Button>
+            {onLogout && (
+              <Button variant="outline" onClick={onLogout} className="flex-1 sm:flex-initial">
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
@@ -355,29 +372,121 @@ export function UserDashboard({ userType, userName, savedDeals, onNavigate, onDa
                   <Separator />
 
                   {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <Button 
-                      className="flex-1" 
-                      onClick={() => {
-                        if (selectedRecommendation) {
-                          handleSaveToggle(selectedRecommendation);
-                        }
-                      }}
-                    >
-                      <Heart className={`w-4 h-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
-                      {isSaved ? 'Saved to Deals' : 'Save Deal'}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => setSelectedRecommendation(null)}
-                    >
-                      Dismiss
-                    </Button>
-                  </div>
+                  <DialogFooter>
+                    <div className="flex gap-3">
+                      <Button 
+                        className="flex-1" 
+                        onClick={() => {
+                          if (selectedRecommendation) {
+                            handleSaveToggle(selectedRecommendation);
+                          }
+                        }}
+                      >
+                        <Heart className={`w-4 h-4 mr-2 ${isSaved ? 'fill-current' : ''}`} />
+                        {isSaved ? 'Saved to Deals' : 'Save Deal'}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => setSelectedRecommendation(null)}
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  </DialogFooter>
                 </div>
               </>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Welcome Modal for New Users */}
+        <Dialog open={showWelcomeModal} onOpenChange={setShowWelcomeModal}>
+          <DialogContent className="sm:max-w-2xl" aria-describedby="user-welcome-description">
+            <DialogHeader>
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-10 h-10 text-green-600" />
+                </div>
+              </div>
+              <DialogTitle className="text-center text-2xl">Welcome to Your Local Deals Directory!</DialogTitle>
+              <DialogDescription id="user-welcome-description" className="text-center">
+                Get the most out of your experience with these quick tips
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6 py-4">
+              {/* Browse & Search */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Search className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">1. Browse & Search for Deals</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Use the search bar and category filters to discover local businesses offering exclusive deals in your community. Filter by location to find what's nearby.
+                  </p>
+                </div>
+              </div>
+
+              {/* Save Deals */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Bookmark className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">2. Save Your Favorite Deals</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Click the heart icon on any business listing to save deals for later. Access all your saved deals from your dashboard at any time.
+                  </p>
+                </div>
+              </div>
+
+              {/* Contact Businesses */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <MessageCircle className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">3. Contact Businesses Directly</h3>
+                  <p className="text-sm text-muted-foreground">
+                    View phone numbers, addresses, and hours directly on each listing. Get directions, call, or email businesses with one click to redeem your deals.
+                  </p>
+                </div>
+              </div>
+
+              {/* NFC Features */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">4. Look for NFC-Enabled Locations</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Some businesses have NFC tags or stands where you can tap your phone to instantly access their listing and current deals - no app download needed!
+                  </p>
+                </div>
+              </div>
+
+              {/* Word of Mouth */}
+              <Card className="bg-gray-50 border-gray-200">
+                <CardContent className="p-4">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-red-500" />
+                    Built on Word-of-Mouth Trust
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    This directory focuses on real community connections. The businesses here are recommended by your local community partners and neighbors - not algorithms.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <DialogFooter>
+              <Button onClick={() => setShowWelcomeModal(false)} className="w-full">
+                Got it, Start Exploring!
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
@@ -393,7 +502,7 @@ export function UserDashboard({ userType, userName, savedDeals, onNavigate, onDa
             <DashboardSwitcher currentType={userType} onTypeChange={onDashboardTypeChange} />
           </div>
         )}
-        <DistributionPartnerDashboard userName={userName} onNavigate={onNavigate} />
+        <DistributionPartnerDashboard userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
       </>
     );
   }
@@ -407,7 +516,7 @@ export function UserDashboard({ userType, userName, savedDeals, onNavigate, onDa
             <DashboardSwitcher currentType={userType} onTypeChange={onDashboardTypeChange} />
           </div>
         )}
-        <AdminDashboard userName={userName} />
+        <AdminDashboard userName={userName} onLogout={onLogout} />
       </>
     );
   }
@@ -421,7 +530,7 @@ export function UserDashboard({ userType, userName, savedDeals, onNavigate, onDa
             <DashboardSwitcher currentType={userType} onTypeChange={onDashboardTypeChange} />
           </div>
         )}
-        <PartnerDashboard userName={userName} onNavigate={onNavigate} />
+        <PartnerDashboard userName={userName} onNavigate={onNavigate} onLogout={onLogout} />
       </>
     );
   }

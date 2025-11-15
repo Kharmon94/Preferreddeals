@@ -946,10 +946,10 @@ export function WhiteLabelPlatformSettings({ onBack, partnerName }: WhiteLabelPl
 
       {/* Add Location Dialog */}
       <Dialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px]" aria-describedby="add-location-description">
           <DialogHeader>
             <DialogTitle>Add New Location</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="add-location-description">
               Add a new city/location to your white-label directory
             </DialogDescription>
           </DialogHeader>
@@ -988,10 +988,10 @@ export function WhiteLabelPlatformSettings({ onBack, partnerName }: WhiteLabelPl
 
       {/* Add Category Dialog */}
       <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px]" aria-describedby="add-category-description">
           <DialogHeader>
             <DialogTitle>Add New Category</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="add-category-description">
               Add a new business category to your directory
             </DialogDescription>
           </DialogHeader>
@@ -1019,10 +1019,10 @@ export function WhiteLabelPlatformSettings({ onBack, partnerName }: WhiteLabelPl
 
       {/* Add Menu Item Dialog */}
       <Dialog open={menuDialogOpen} onOpenChange={setMenuDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px]" aria-describedby="add-menu-item-description">
           <DialogHeader>
             <DialogTitle>Add {menuType === 'header' ? 'Header' : 'Footer'} Menu Item</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="add-menu-item-description">
               Add a new menu item to your {menuType} navigation
             </DialogDescription>
           </DialogHeader>

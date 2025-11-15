@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Package, Users, DollarSign, BarChart3, Settings, TrendingUp, AlertCircle, CheckCircle, Clock, Search, Filter, MoreVertical, Eye, Edit, Trash2, Mail, Calendar, Heart, X, MapPin, Phone, Globe, Map, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react';
+import { Package, Users, DollarSign, BarChart3, Settings, TrendingUp, AlertCircle, CheckCircle, Clock, Search, Filter, MoreVertical, Eye, Edit, Trash2, Mail, Calendar, Heart, X, MapPin, Phone, Globe, Map, ChevronLeft, ChevronRight, CreditCard, LogOut } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
@@ -21,9 +21,10 @@ import { WhiteLabelPlatformSettings } from './white-label-platform-settings';
 
 interface AdminDashboardProps {
   userName: string;
+  onLogout?: () => void;
 }
 
-export function AdminDashboard({ userName }: AdminDashboardProps) {
+export function AdminDashboard({ userName, onLogout }: AdminDashboardProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<typeof recentUsers[0] | null>(null);
@@ -498,10 +499,18 @@ export function AdminDashboard({ userName }: AdminDashboardProps) {
           <h1 className="mb-2 text-[20px]">Admin Dashboard</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Platform overview and management</p>
         </div>
-        <Button variant="outline" onClick={() => setShowAdminPlatformSettings(true)} className="w-full sm:w-auto">
-          <Settings className="w-4 h-4 mr-2" />
-          Platform Settings
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => setShowAdminPlatformSettings(true)} className="flex-1 sm:flex-initial">
+            <Settings className="w-4 h-4 mr-2" />
+            Platform Settings
+          </Button>
+          {onLogout && (
+            <Button variant="outline" onClick={onLogout} className="flex-1 sm:flex-initial">
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Alert for pending approvals */}

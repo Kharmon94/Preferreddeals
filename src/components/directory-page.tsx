@@ -71,6 +71,13 @@ export function DirectoryPage({ onViewListing, initialCategory, initialLocation 
   const featuredBusinesses = filteredBusinesses.filter((b) => b.featured);
   const dealsBusinesses = filteredBusinesses.filter((b) => b.hasDeals);
 
+  // Sort businesses to show featured first in "all" tab
+  const sortedBusinesses = [...filteredBusinesses].sort((a, b) => {
+    if (a.featured && !b.featured) return -1;
+    if (!a.featured && b.featured) return 1;
+    return 0;
+  });
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -161,7 +168,7 @@ export function DirectoryPage({ onViewListing, initialCategory, initialLocation 
 
         <TabsContent value="all">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredBusinesses.map((business) => (
+            {sortedBusinesses.map((business) => (
               <BusinessCard key={business.id} business={business} onClick={() => onViewListing(business.id)} />
             ))}
           </div>

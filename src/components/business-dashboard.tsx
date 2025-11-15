@@ -41,6 +41,7 @@ import {
 interface BusinessDashboardProps {
   businessId: string | null;
   onNavigate?: (page: string) => void;
+  onLogout?: () => void;
 }
 
 interface Listing {
@@ -148,7 +149,7 @@ const premiumPlans = [
   },
 ];
 
-export function BusinessDashboard({ businessId, onNavigate }: BusinessDashboardProps) {
+export function BusinessDashboard({ businessId, onNavigate, onLogout }: BusinessDashboardProps) {
   // Multiple listings support - Updated with premium modal and $49 pricing
   const [listings, setListings] = useState<Listing[]>([
     {

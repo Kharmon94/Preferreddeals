@@ -84,6 +84,9 @@ export default function App() {
     setUserName('');
     setUserEmail('');
     setSavedDeals([]);
+    setUserType('user');
+    setBusinessId(null);
+    setIsBusinessLoggedIn(false);
     setCurrentPage('directory');
   };
 
@@ -217,6 +220,7 @@ export default function App() {
           onDashboardTypeChange={handleDashboardTypeChange}
           isUserLoggedIn={isUserLoggedIn}
           onToggleSave={handleToggleSaveDeal}
+          onLogout={handleUserLogout}
         />
       )}
       {currentPage === 'settings' && (

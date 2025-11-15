@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Store, Plus, Eye, Edit, TrendingUp, Phone, Mail, MapPin, Clock, Star, BarChart3, Globe, Tag, Upload, X, GripVertical, ChevronLeft, ChevronRight, DollarSign, Check, CheckCircle, CreditCard, Sparkles } from 'lucide-react';
+import { Store, Plus, Eye, Edit, TrendingUp, Phone, Mail, MapPin, Clock, Star, BarChart3, Globe, Tag, Upload, X, GripVertical, ChevronLeft, ChevronRight, DollarSign, Check, CheckCircle, CreditCard, Sparkles, LogOut } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -19,9 +19,10 @@ import { toast } from 'sonner@2.0.3';
 interface PartnerDashboardProps {
   userName: string;
   onNavigate: (page: string) => void;
+  onLogout?: () => void;
 }
 
-export function PartnerDashboard({ userName, onNavigate }: PartnerDashboardProps) {
+export function PartnerDashboard({ userName, onNavigate, onLogout }: PartnerDashboardProps) {
   const [viewListingId, setViewListingId] = useState<string | null>(null);
   const [editListingId, setEditListingId] = useState<string | null>(null);
   const [showCreateDeal, setShowCreateDeal] = useState(false);
@@ -317,10 +318,18 @@ export function PartnerDashboard({ userName, onNavigate }: PartnerDashboardProps
           <h1 className="mb-2 text-[20px]">My Business Listings</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Manage your business presence and track performance</p>
         </div>
-        <Button onClick={() => setShowNewBusiness(true)} className="w-full sm:w-auto">
-          <Plus className="w-4 h-4 mr-2" />
-          Add New Business
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button onClick={() => setShowNewBusiness(true)} className="flex-1 sm:flex-initial">
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Business
+          </Button>
+          {onLogout && (
+            <Button variant="outline" onClick={onLogout} className="flex-1 sm:flex-initial">
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Overview Stats */}

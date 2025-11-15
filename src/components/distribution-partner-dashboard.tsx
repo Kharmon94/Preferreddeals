@@ -1,6 +1,6 @@
 import { WhiteLabelPlatform } from './white-label-platform-new';
 import { useState } from 'react';
-import { Users, Award, DollarSign, TrendingUp, Copy, Share2, Gift, Globe, ArrowRight, MapPin, Package, BarChart3, Eye, Map, ChevronLeft, ChevronRight, CheckCircle, Search, CreditCard, Plus, Check, Sparkles, Star } from 'lucide-react';
+import { Users, Award, DollarSign, TrendingUp, Copy, Share2, Gift, Globe, ArrowRight, MapPin, Package, BarChart3, Eye, Map, ChevronLeft, ChevronRight, CheckCircle, Search, CreditCard, Plus, Check, Sparkles, Star, LogOut } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
@@ -16,9 +16,10 @@ import { toast } from 'sonner@2.0.3';
 interface DistributionPartnerDashboardProps {
   userName: string;
   onNavigate?: (page: string) => void;
+  onLogout?: () => void;
 }
 
-export function DistributionPartnerDashboard({ userName, onNavigate }: DistributionPartnerDashboardProps) {
+export function DistributionPartnerDashboard({ userName, onNavigate, onLogout }: DistributionPartnerDashboardProps) {
   const [showWhiteLabel, setShowWhiteLabel] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<typeof partnerLocations[0] | null>(null);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
@@ -48,6 +49,7 @@ export function DistributionPartnerDashboard({ userName, onNavigate }: Distribut
     zip: '',
   });
   const [showWelcomeModal, setShowWelcomeModal] = useState(true); // Show welcome modal on first visit
+  const [showWhiteLabelWelcomeModal, setShowWhiteLabelWelcomeModal] = useState(false); // Show white-label welcome modal on upgrade
   
   // Mock payment methods
   const [paymentMethods, setPaymentMethods] = useState([
@@ -191,14 +193,14 @@ export function DistributionPartnerDashboard({ userName, onNavigate }: Distribut
 
   const handleConfirmPayment = () => {
     // Simulate payment processing
-    toast.success('White-label platform activated! Redirecting...');
+    toast.success('White-label platform activated!');
     setShowPaymentDialog(false);
     setPaymentCardData({ cardNumber: '', expiry: '', cvc: '', name: '' });
     setHasWhiteLabel(true);
-    // After a short delay, show the white-label platform
+    // Show the welcome modal first
     setTimeout(() => {
-      setShowWhiteLabel(true);
-    }, 1000);
+      setShowWhiteLabelWelcomeModal(true);
+    }, 500);
   };
 
   const handleNfcStandsRequest = () => {
@@ -217,9 +219,17 @@ export function DistributionPartnerDashboard({ userName, onNavigate }: Distribut
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="mb-2 text-[20px]">Distribution Partner Dashboard</h1>
-        <p className="text-muted-foreground text-sm sm:text-base">Track your link performance, {userName}</p>
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="mb-2 text-[20px]">Distribution Partner Dashboard</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Track your link performance, {userName}</p>
+        </div>
+        {onLogout && (
+          <Button variant="outline" onClick={onLogout} className="w-full sm:w-auto">
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        )}
       </div>
 
       {/* Stats Grid */}
@@ -1231,19 +1241,6 @@ export function DistributionPartnerDashboard({ userName, onNavigate }: Distribut
               </div>
             </div>
 
-            {/* Manage White-Label Platform */}
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Globe className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1">Manage Your White-Label Platform</h3>
-                <p className="text-sm text-muted-foreground">
-                  If you have a white-label subscription, access platform settings to customize branding, approve businesses, and manage your directory from the Overview tab.
-                </p>
-              </div>
-            </div>
-
             {/* Track Performance */}
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1256,10 +1253,102 @@ export function DistributionPartnerDashboard({ userName, onNavigate }: Distribut
                 </p>
               </div>
             </div>
+
+            {/* Request NFC Materials */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Package className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Request Free NFC Materials</h3>
+                <p className="text-sm text-muted-foreground">
+                  Get free NFC stands and keychains to help distribute and promote Preferred Deals in your community from the Overview tab.
+                </p>
+              </div>
+            </div>
           </div>
 
           <DialogFooter>
             <Button onClick={() => setShowWelcomeModal(false)} className="w-full">
+              Got it, Let's Get Started!
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* White-Label Welcome Modal */}
+      <Dialog open={showWhiteLabelWelcomeModal} onOpenChange={setShowWhiteLabelWelcomeModal}>
+        <DialogContent className="sm:max-w-2xl" aria-describedby="white-label-welcome-modal-description">
+          <DialogHeader>
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-10 h-10 text-green-600" />
+              </div>
+            </div>
+            <DialogTitle className="text-center text-2xl">Welcome to Your White-Label Platform!</DialogTitle>
+            <DialogDescription id="white-label-welcome-modal-description" className="text-center text-base">
+              Congratulations on upgrading to a White-Label Directory! Here's how to get started.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Setup Your Domain */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Globe className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">1. Setup Your Domain & Branding</h3>
+                <p className="text-sm text-muted-foreground">
+                  Click "Manage Platform" from your dashboard to customize your subdomain (e.g., yourname.preferreddeals.com), upload your logo, and set your brand colors.
+                </p>
+              </div>
+            </div>
+
+            {/* Add Categories */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Package className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">2. Add Categories & Locations</h3>
+                <p className="text-sm text-muted-foreground">
+                  Configure your directory categories (e.g., Restaurants, Services, Retail) and add your service locations in the Platform Settings.
+                </p>
+              </div>
+            </div>
+
+            {/* Get First Listing */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">3. Get Your First Listing from Marketplace</h3>
+                <p className="text-sm text-muted-foreground">
+                  Browse the Business Marketplace tab to add verified businesses to your directory. Look for businesses that have opted-in to be featured in white-label platforms.
+                </p>
+              </div>
+            </div>
+
+            {/* Approve Businesses */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Users className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">4. Manage Business Approvals</h3>\n                <p className="text-sm text-muted-foreground">
+                  As businesses apply to join your directory, review and approve them from the "Business Approvals" tab in your Platform Settings.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => {
+              setShowWhiteLabelWelcomeModal(false);
+              setShowWhiteLabel(true);
+            }} className="w-full">
               Got it, Let's Get Started!
             </Button>
           </DialogFooter>
